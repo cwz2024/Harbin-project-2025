@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哈尔滨红色地图</title>
+    <!-- 引入Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+        }
+
+        #coordinate-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 5px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        #nearest-points {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        #nearest-points ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #nearest-points li {
+            cursor: pointer;
+            margin: 5px 0;
+            color: blue;
+            text-decoration: underline;
+        }
+
+        /* 自定义定位按钮 */
+        .leaflet-control-locate {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .leaflet-control-locate:hover {
+            background: #f4f4f4;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <!-- 显示经纬度的容器 -->
+    <div id="coordinate-display">
+        经纬度: <span id="coordinates">-</span>
+    </div>
+    <!-- 显示最近路径点的容器 -->
+    <div id="nearest-points">
+        <h4>离你最近的红色景点：</h4>
+        <ul id="nearest-points-list"></ul>
+    </div>
+
+    <!-- 引入Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // 常量：初始坐标
+        const INITIAL_LAT = 30.3; // 纬度
+        const INITIAL_LNG = 112.2; // 经度
+        const DEFAULT_ZOOM = 13; // 默认缩放级别
+
+        // 检测是否为移动端
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        var zoomControlPosition = isMobile() ? 'topleft' : 'bottomright';
+        var locateControlPosition = isMobile() ? 'topleft' : 'bottomright';
+
+        // 初始化地图
+        var map = L.map('map').setView([INITIAL_LAT, INITIAL_LNG], DEFAULT_ZOOM);
+
+        // 添加地图图层（高德地图）
+        L.tileLayer('https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+            attribution: '地图数据 &copy; <a href="https://www.amap.com/">高德地图</a>'
+        }).addTo(map);
+
+        // 将缩放控件移动到右下角
+        map.zoomControl.setPosition(zoomControlPosition);
+
+        // 自定义定位按钮
+        var locateControl = L.Control.extend({
+            options: {
+                position: locateControlPosition
+            },
+            onAdd: function (map) {
+                var container = L.DomUtil.create('div', 'leaflet-control-locate');
+                container.innerHTML = '📍'; // 按钮图标
+                container.title = '定位到我的位置';
+                container.style.fontSize = '20px';
+                container.style.textAlign = 'center';
+                container.style.width = '30px';
+                container.style.height = '30px';
+                container.style.lineHeight = '30px';
+
+                // 点击按钮时定位到用户位置
+                container.onclick = function () {
+                    if ("geolocation" in navigator) {
+                        navigator.geolocation.getCurrentPosition(function (position) {
+                            var lat = position.coords.latitude;
+                            var lng = position.coords.longitude;
+                            map.setView([lat, lng], DEFAULT_ZOOM); // 定位到用户位置并恢复默认缩放
+                        }, function (error) {
+                            console.error("Error Code = " + error.code + " - " + error.message);
+                        });
+                    } else {
+                        alert("你的浏览器不支持地理定位功能。");
+                    }
+                };
+
+                return container;
+            }
+        });
+
+        // 添加定位按钮到地图
+        map.addControl(new locateControl());
+
+        // 定义用户定位点的图标（默认图标）
+        var userIcon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png', // 默认图标
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+
+        // 定义路径点的图标
+        var pathPointIcon = L.icon({
+            iconUrl: 'https://cdn.luogu.com.cn/upload/image_hosting/ulvs2stg.png', // 自定义图标
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+
+        // 存储路径点数据
+        var pathPoints = [];
+
+        // 动态加载路径点数据
+        fetch('pathPoints.json')
+            .then(response => response.json())
+            .then(data => {
+                pathPoints = data; // 存储路径点数据
+                data.forEach(function (point) {
+                    var marker = L.marker([point.lat, point.lng], { icon: pathPointIcon }).addTo(map)
+                        .bindPopup(`<b>${point.title}</b><br>${point.content}`);
+                    marker.on('click', function () {
+                        marker.openPopup();
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('加载路径点数据失败:', error);
+            });
+
+        // 定位功能
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var userLat = position.coords.latitude;
+                var userLng = position.coords.longitude;
+
+                // 定位到用户位置
+                map.setView([userLat, userLng], DEFAULT_ZOOM);
+                L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
+                    .bindPopup('你在这里').openPopup();
+
+                // 计算用户位置与路径点的距离
+                calculateAndDisplayNearestPoints(userLat, userLng);
+            }, function (error) {
+                console.error("Error Code = " + error.code + " - " + error.message);
+            });
+        } else {
+            alert("你的浏览器不支持地理定位功能。");
+        }
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            var R = 6371000; // 地球半径，单位：米
+            var dLat = (lat2 - lat1) * Math.PI / 180;
+            var dLng = (lng2 - lng1) * Math.PI / 180;
+            var a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // 格式化距离显示
+        function formatDistance(distance) {
+            if (distance < 1000) {
+                return `${Math.round(distance)} m`; // 小于1公里，显示米，保留整数
+            } else {
+                return `${(distance / 1000).toFixed(1)} km`; // 大于或等于1公里，显示公里，保留1位小数
+            }
+        }
+
+        // 计算并显示最近的路径点
+        function calculateAndDisplayNearestPoints(userLat, userLng) {
+            var pointsWithDistance = pathPoints.map(point => {
+                var distance = calculateDistance(userLat, userLng, point.lat, point.lng);
+                return { ...point, distance };
+            });
+
+            pointsWithDistance.sort((a, b) => a.distance - b.distance);
+
+            var nearestPoints = pointsWithDistance.slice(0, 2);
+
+            // 显示在左下角
+            var nearestPointsList = document.getElementById('nearest-points-list');
+            nearestPointsList.innerHTML = nearestPoints.map(point => `
+                <li data-lat="${point.lat}" data-lng="${point.lng}">
+                    ${point.title} - ${formatDistance(point.distance)}
+                </li>
+            `).join('');
+
+            // 点击最近路径点时，定位到该路径点
+            nearestPointsList.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', function () {
+                    var lat = parseFloat(this.getAttribute('data-lat'));
+                    var lng = parseFloat(this.getAttribute('data-lng'));
+                    map.setView([lat, lng], DEFAULT_ZOOM); // 定位到路径点
+                });
+            });
+        }
+
+        map.on('mousemove', function (e) {
+            // 获取鼠标位置的经纬度
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+
+            // 更新显示经纬度的内容
+            document.getElementById('coordinates').textContent = lat + ', ' + lng;
+        });
+
+        // 当鼠标移出地图时，清空显示
+        map.on('mouseout', function () {
+            document.getElementById('coordinates').textContent = '-';
+        });
+    </script>
+</body>
+
+</html>
