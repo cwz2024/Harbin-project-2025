@@ -20,6 +20,7 @@
             padding: 5px;
             border: 1px solid #ccc;
             z-index: 1000;
+            display: none;
         }
 
         #nearest-points {
@@ -31,6 +32,7 @@
             border: 1px solid #ccc;
             z-index: 1000;
             max-width: 300px;
+            display: none;
         }
 
         #nearest-points ul {
@@ -49,14 +51,65 @@
         /* 自定义定位按钮 */
         .leaflet-control-locate {
             background: white;
-            border: 1px solid #ccc;
+            border: 2px solid #ccc;
             border-radius: 4px;
             padding: 5px;
             cursor: pointer;
+            color: blue;
+            text-align: center;
+            display: none;
+            width: 20px;
+            height: 20px;
+            line-height: 20px;
+            font-size: 20px;
+            font-weight: bold;
         }
 
         .leaflet-control-locate:hover {
             background: #f4f4f4;
+        }
+
+        /* 侧边栏样式 */
+        #sidebar {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            background: red;
+            padding: 10px;
+            border: 1px solid #ccc;
+            z-index: 1000;
+            width: 200px;
+            transition: transform 0.3s ease;
+            transform: translateX(-120%);
+        }
+
+        #sidebar.open {
+            transform: translateX(0);
+        }
+
+        #sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #sidebar li {
+            cursor: pointer;
+            margin: 10px 0;
+            color: gold;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -72,22 +125,25 @@
         <h4>离你最近的红色景点：</h4>
         <ul id="nearest-points-list"></ul>
     </div>
+    <!-- 侧边栏 -->
+    <div id="sidebar">
+        <ul id="sidebar-list"></ul>
+    </div>
+    <!-- 侧边栏展开/收起按钮 -->
+    <div id="sidebar-toggle">☰</div>
 
     <!-- 引入Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // 常量：初始坐标
-        const INITIAL_LAT = 30.3; // 纬度
-        const INITIAL_LNG = 112.2; // 经度
-        const DEFAULT_ZOOM = 13; // 默认缩放级别
+        const INITIAL_LAT = 45.761; // 纬度
+        const INITIAL_LNG = 126.631; // 经度
+        const DEFAULT_ZOOM = 14; // 默认缩放级别
 
         // 检测是否为移动端
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
-
-        var zoomControlPosition = isMobile() ? 'topleft' : 'bottomright';
-        var locateControlPosition = isMobile() ? 'topleft' : 'bottomright';
 
         // 初始化地图
         var map = L.map('map').setView([INITIAL_LAT, INITIAL_LNG], DEFAULT_ZOOM);
@@ -97,23 +153,20 @@
             attribution: '地图数据 &copy; <a href="https://www.amap.com/">高德地图</a>'
         }).addTo(map);
 
-        // 将缩放控件移动到右下角
-        map.zoomControl.setPosition(zoomControlPosition);
+        // 根据设备类型决定是否显示经纬度
+        document.getElementById('coordinate-display').style.display = isMobile() ? 'none' : 'block';
+
+        map.zoomControl.setPosition('bottomright');
 
         // 自定义定位按钮
         var locateControl = L.Control.extend({
             options: {
-                position: locateControlPosition
+                position: 'bottomright'
             },
             onAdd: function (map) {
                 var container = L.DomUtil.create('div', 'leaflet-control-locate');
-                container.innerHTML = '📍'; // 按钮图标
+                container.innerHTML = '⊙'; // 按钮图标
                 container.title = '定位到我的位置';
-                container.style.fontSize = '20px';
-                container.style.textAlign = 'center';
-                container.style.width = '30px';
-                container.style.height = '30px';
-                container.style.lineHeight = '30px';
 
                 // 点击按钮时定位到用户位置
                 container.onclick = function () {
@@ -135,9 +188,10 @@
         });
 
         // 添加定位按钮到地图
-        map.addControl(new locateControl());
+        var locateControlInstance = new locateControl();
+        map.addControl(locateControlInstance);
 
-        // 定义用户定位点的图标（默认图标）
+        // 定义用户定位点的图标（默认图标，恢复原始大小）
         var userIcon = L.icon({
             iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png', // 默认图标
             iconSize: [25, 41],
@@ -161,11 +215,33 @@
             .then(response => response.json())
             .then(data => {
                 pathPoints = data; // 存储路径点数据
+
+                // 按路径点title的字典序排序
+                pathPoints.sort((a, b) => a.title.localeCompare(b.title));
+
+                // 遍历路径点数据
                 data.forEach(function (point) {
                     var marker = L.marker([point.lat, point.lng], { icon: pathPointIcon }).addTo(map)
                         .bindPopup(`<b>${point.title}</b><br>${point.content}`);
                     marker.on('click', function () {
                         marker.openPopup();
+                    });
+                });
+
+                // 在侧边栏中显示路径点
+                var sidebarList = document.getElementById('sidebar-list');
+                sidebarList.innerHTML = pathPoints.map(point => `
+                    <li data-lat="${point.lat}" data-lng="${point.lng}">
+                        ${point.title}
+                    </li>
+                `).join('');
+
+                // 点击侧边栏中的路径点时，定位到该路径点
+                sidebarList.querySelectorAll('li').forEach(li => {
+                    li.addEventListener('click', function () {
+                        var lat = parseFloat(this.getAttribute('data-lat'));
+                        var lng = parseFloat(this.getAttribute('data-lng'));
+                        map.setView([lat, lng], DEFAULT_ZOOM); // 定位到路径点
                     });
                 });
             })
@@ -175,22 +251,31 @@
 
         // 定位功能
         if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                var userLat = position.coords.latitude;
-                var userLng = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    var userLat = position.coords.latitude;
+                    var userLng = position.coords.longitude;
 
-                // 定位到用户位置
-                map.setView([userLat, userLng], DEFAULT_ZOOM);
-                L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
-                    .bindPopup('你在这里').openPopup();
+                    // 定位到用户位置
+                    map.setView([userLat, userLng], DEFAULT_ZOOM);
+                    L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
+                        .bindPopup('你在这里').openPopup();
 
-                // 计算用户位置与路径点的距离
-                calculateAndDisplayNearestPoints(userLat, userLng);
-            }, function (error) {
-                console.error("Error Code = " + error.code + " - " + error.message);
-            });
+                    document.getElementById('nearest-points').style.display = 'block';
+                    document.querySelector('.leaflet-control-locate').style.display = 'block';
+
+                    calculateAndDisplayNearestPoints(userLat, userLng);
+                },
+                function (error) {
+                    console.error("Error Code = " + error.code + " - " + error.message);
+                    document.getElementById('nearest-points').style.display = 'none';
+                    document.querySelector('.leaflet-control-locate').style.display = 'none';
+                }
+            );
         } else {
             alert("你的浏览器不支持地理定位功能。");
+            document.getElementById('nearest-points').style.display = 'none';
+            document.querySelector('.leaflet-control-locate').style.display = 'none';
         }
 
         function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -255,6 +340,12 @@
         // 当鼠标移出地图时，清空显示
         map.on('mouseout', function () {
             document.getElementById('coordinates').textContent = '-';
+        });
+
+        // 侧边栏展开/收起功能
+        document.getElementById('sidebar-toggle').addEventListener('click', function () {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
         });
     </script>
 </body>
