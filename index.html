@@ -27,12 +27,15 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: white;
+            background: rgba(255, 0, 0, 0.8);
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 2px solid #8B0000;
+            border-radius: 8px;
             z-index: 1000;
             max-width: 300px;
             display: none;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         #nearest-points ul {
@@ -44,8 +47,15 @@
         #nearest-points li {
             cursor: pointer;
             margin: 5px 0;
-            color: blue;
+            color: gold;
             text-decoration: underline;
+        }
+
+        #nearest-points h4 {
+            margin: 0 0 10px 0;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
         }
 
         /* 自定义定位按钮 */
@@ -74,13 +84,16 @@
             position: absolute;
             top: 50px;
             left: 10px;
-            background: red;
+            background: rgba(255, 0, 0, 0.8);
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 2px solid #8B0000;
+            border-radius: 8px;
             z-index: 1000;
             width: 200px;
             transition: transform 0.3s ease;
             transform: translateX(-120%);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         #sidebar.open {
@@ -91,12 +104,20 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background: white;
-            border: 1px solid #ccc;
+            background: rgba(255, 0, 0, 0.8);
+            border: 2px solid #8B0000;
             border-radius: 4px;
             padding: 5px;
             cursor: pointer;
             z-index: 1001;
+            color: white;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         #sidebar ul {
