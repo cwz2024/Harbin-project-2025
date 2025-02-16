@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
-            height: 100vh;
+            height: 97.5vh;
         }
 
         #coordinate-display {
@@ -32,7 +32,7 @@
             border: 2px solid #8B0000;
             border-radius: 8px;
             z-index: 1000;
-            max-width: 300px;
+            max-width: 70%;
             display: none;
             color: white;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -242,8 +242,13 @@
 
                 // 遍历路径点数据
                 data.forEach(function (point) {
-                    var marker = L.marker([point.lat, point.lng], { icon: pathPointIcon }).addTo(map)
-                        .bindPopup(`<b>${point.title}</b><br>${point.content}`);
+                    var marker = L.marker([point.lat, point.lng], { icon: pathPointIcon }).addTo(map);
+                    var popupContent = `
+                        <b>${point.title}</b><br>
+                        <img src="${point.image}" alt="${point.title}" style="width:100%;"><br>
+                        ${point.content}<br>
+                    `;
+                    marker.bindPopup(popupContent);
                     marker.on('click', function () {
                         marker.openPopup();
                     });
@@ -291,6 +296,10 @@
                     console.error("Error Code = " + error.code + " - " + error.message);
                     document.getElementById('nearest-points').style.display = 'none';
                     document.querySelector('.leaflet-control-locate').style.display = 'none';
+
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert("建议打开定位功能以体验本网站的全部功能\n本网站没有后端服务，位置信息仅用于");
+                    }
                 }
             );
         } else {
