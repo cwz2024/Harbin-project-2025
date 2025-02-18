@@ -33,7 +33,7 @@
 
         #nearest-points {
             position: fixed;
-            bottom: 10px;
+            bottom: 20px;
             left: 10px;
             background: rgba(255, 0, 0, 0.8);
             padding: 10px;
@@ -77,19 +77,18 @@
             border: 2px solid rgba(0, 0, 0, 0.2);
             border-radius: 4px;
             cursor: pointer;
-            color: blue;
-            text-align: center;
-            display: none;
             width: 30px;
             height: 30px;
-            line-height: 30px;
-            font-size: 25px;
-            font-weight: bold;
             padding: 0;
         }
 
-        .leaflet-control-locate:hover {
+        .leaflet-control-locate.active:hover {
             background: #f4f4f4;
+        }
+
+        #locate-icon {
+            stroke-width: 3;
+            stroke: #A9A9A9;
         }
 
         /* 侧边栏样式 */
@@ -252,7 +251,19 @@
             },
             onAdd: function (map) {
                 var container = L.DomUtil.create('div', 'leaflet-control-locate');
-                container.innerHTML = '⊙'; // 按钮图标
+                container.innerHTML = `
+                    <svg width="30" height="30" viewbox="-5 -5 40 40" id="locate-icon">
+
+                        <circle cx="15" cy="15" r="10" fill="transparent" />
+                        <circle cx="15" cy="15" r="1" fill="transparent" />
+
+                        <line x1="25" x2="30" y1="15" y2="15" />
+                        <line x1="5" x2="0" y1="15" y2="15" />
+                        <line y1="25" y2="30" x1="15" x2="15" />
+                        <line y1="5" y2="0" x1="15" x2="15" />
+
+                    </svg>
+                `;
                 container.title = '定位到我的位置';
 
                 // 点击按钮时定位到用户位置
@@ -379,14 +390,14 @@
                         .bindPopup('你在这里').openPopup();
 
                     document.getElementById('nearest-points').style.display = 'block';
-                    document.querySelector('.leaflet-control-locate').style.display = 'block';
+                    document.getElementById('locate-icon').style.stroke = '#0091ff';
+                    document.querySelector('.leaflet-control-locate').classList.add('active');
 
                     calculateAndDisplayNearestPoints(userLat, userLng);
                 },
                 function (error) {
                     console.error("Error Code = " + error.code + " - " + error.message);
                     document.getElementById('nearest-points').style.display = 'none';
-                    document.querySelector('.leaflet-control-locate').style.display = 'none';
 
                     if (error.code === error.PERMISSION_DENIED) {
                         alert("建议打开定位功能以体验本网站的全部功能\n本网站没有后端服务，位置信息仅用于本地服务");
@@ -396,7 +407,6 @@
         } else {
             alert("你的浏览器不支持地理定位功能。");
             document.getElementById('nearest-points').style.display = 'none';
-            document.querySelector('.leaflet-control-locate').style.display = 'none';
         }
 
         function calculateDistance(lat1, lng1, lat2, lng2) {
