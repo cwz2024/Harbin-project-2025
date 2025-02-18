@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>哈尔滨红色地图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>哈尔滨&沈阳红色地图</title>
     <!-- 引入Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
@@ -154,6 +154,35 @@
             color: goldenrod;
             text-decoration: underline;
         }
+
+        /* 导航栏样式 */
+        #location-nav {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        #location-nav button {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #8B0000;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            color: #8B0000;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        #location-nav button:hover {
+            background: #8B0000;
+            color: white;
+        }
+
+        #location-nav button.active {
+            background: #8B0000;
+            color: white;
+        }
     </style>
 </head>
 
@@ -170,6 +199,10 @@
     </div>
     <!-- 侧边栏 -->
     <div id="sidebar">
+        <nav id="location-nav">
+            <button data-location="哈尔滨">哈尔滨</button>
+            <button data-location="沈阳">沈阳</button>
+        </nav>
         <ul id="sidebar-list"></ul>
     </div>
     <!-- 侧边栏展开/收起按钮 -->
@@ -178,6 +211,17 @@
     <!-- 引入Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // 动态调整地图高度
+        function setMapHeight() {
+            var map = document.getElementById('map');
+            map.style.height = window.innerHeight + 'px';
+        }
+
+        setMapHeight();
+
+        window.addEventListener('resize', setMapHeight);
+        window.addEventListener('orientationchange', setMapHeight);
+
         // 常量：初始坐标
         const INITIAL_LAT = 45.761; // 纬度
         const INITIAL_LNG = 126.631; // 经度
@@ -262,40 +306,65 @@
                 // 按路径点title的字典序排序
                 pathPoints.sort((a, b) => a.title.localeCompare(b.title));
 
-                // 遍历路径点数据
-                data.forEach(function (point) {
+                // 初始化显示所有路径点
+                pathPoints.forEach(function (point) {
                     var marker = L.marker([point.lat, point.lng], { icon: pathPointIcon }).addTo(map);
                     var popupContent = `
-                        <b>${point.title}</b><br>
-                        <img src="${point.image}" alt="${point.title}" style="width:100%;"><br>
-                        ${point.content}<br>
-                    `;
+                    <b>${point.title}</b><br>
+                    <img src="${point.image}" alt="${point.title}" style="width:100%;"><br>
+                    ${point.content ?? '这是' + point.title}<br>
+                `;
                     marker.bindPopup(popupContent);
                     marker.on('click', function () {
                         marker.openPopup();
                     });
                 });
 
-                // 在侧边栏中显示路径点
-                var sidebarList = document.getElementById('sidebar-list');
-                sidebarList.innerHTML = pathPoints.map(point => `
-                    <li data-lat="${point.lat}" data-lng="${point.lng}">
-                        ${point.title}
-                    </li>
-                `).join('');
+                // 显示哈尔滨的路径点
 
-                // 点击侧边栏中的路径点时，定位到该路径点
-                sidebarList.querySelectorAll('li').forEach(li => {
-                    li.addEventListener('click', function () {
-                        var lat = parseFloat(this.getAttribute('data-lat'));
-                        var lng = parseFloat(this.getAttribute('data-lng'));
-                        map.setView([lat, lng], DEFAULT_ZOOM); // 定位到路径点
+                updateSidebar(pathPoints.filter(point => point.location === '哈尔滨'));
+                document.querySelector('#location-nav button').classList.add('active');
+
+                // 导航栏按钮点击事件
+                document.querySelectorAll('#location-nav button').forEach(button => {
+                    button.addEventListener('click', function () {
+                        var location = this.getAttribute('data-location');
+                        var filteredPoints = pathPoints.filter(point => point.location === location);
+
+                        // 更新侧边栏
+                        updateSidebar(filteredPoints);
+
+                        // 设置按钮的激活状态
+                        document.querySelectorAll('#location-nav button').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        this.classList.add('active');
                     });
                 });
             })
             .catch(error => {
                 console.error('加载路径点数据失败:', error);
             });
+
+        // 更新侧边栏的函数
+        function updateSidebar(points) {
+            // 更新侧边栏中的路径点
+            var sidebarList = document.getElementById('sidebar-list');
+            sidebarList.innerHTML = points.map(point => `
+                <li data-lat="${point.lat}" data-lng="${point.lng}">
+                    ${point.title}
+                </li>
+            `).join('');
+
+            // 点击侧边栏中的路径点时，定位到该路径点
+            sidebarList.querySelectorAll('li').forEach(li => {
+                li.addEventListener('click', function () {
+                    var lat = parseFloat(this.getAttribute('data-lat'));
+                    var lng = parseFloat(this.getAttribute('data-lng'));
+                    map.setView([lat, lng], DEFAULT_ZOOM); // 定位到路径点
+                });
+            });
+        }
 
         // 定位功能
         if ("geolocation" in navigator) {
