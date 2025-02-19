@@ -183,6 +183,9 @@
             color: white;
         }
     </style>
+    <!-- 引入Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="leaflet.mapCorrection.js"></script>
 </head>
 
 <body>
@@ -207,8 +210,6 @@
     <!-- 侧边栏展开/收起按钮 -->
     <div id="sidebar-toggle">☰</div>
 
-    <!-- 引入Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // 动态调整地图高度
         function setMapHeight() {
@@ -225,8 +226,7 @@
         const INITIAL_LAT = 45.761; // 纬度
         const INITIAL_LNG = 126.631; // 经度
         const DEFAULT_ZOOM = 14; // 默认缩放级别
-        const DELTA_LAT = -0.00265;
-        const DELTA_LNG = 0.00570;
+        const MIN_UPDATE_DIST = 20;
         let userLat = INITIAL_LAT;
         let userLng = INITIAL_LNG;
 
@@ -240,7 +240,8 @@
 
         // 添加地图图层（高德地图）
         L.tileLayer('https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-            attribution: '地图数据 &copy; <a href="https://www.amap.com/">高德地图</a>'
+            attribution: '地图数据 &copy; <a href="https://www.amap.com/">高德地图</a>',
+            coordType: 'gcj02'
         }).addTo(map);
 
         // 根据设备类型决定是否显示经纬度
@@ -273,7 +274,7 @@
                 // 点击按钮时定位到用户位置
                 container.onclick = function () {
                     if (this.classList.contains('active')) {
-                        map.setView([userLat + DELTA_LAT, userLng + DELTA_LNG], DEFAULT_ZOOM); // 定位到用户位置并恢复默认缩放
+                        map.setView([userLat, userLng], DEFAULT_ZOOM); // 定位到用户位置并恢复默认缩放
                     } else {
                         console.log('无效的定位请求');
                     }
@@ -380,22 +381,36 @@
 
         // 定位功能
         if ("geolocation" in navigator) {
-            // 使用 watchPosition 持续监听用户位置变化
             navigator.geolocation.watchPosition(
                 function (position) {
+                    let lstLat = userLat;
+                    let lstLng = userLng;
                     userLat = position.coords.latitude;
                     userLng = position.coords.longitude;
                     console.log('用户在北纬 ' + userLat + '，东经 ' + userLng);
+                    console.log(userMarker === null);
+
+                    if (userMarker !== null && calculateDistance(userLat, userLng, lstLat, lstLng) < MIN_UPDATE_DIST) {
+                        userLat = lstLat;
+                        userLng = lstLng;
+                        return;
+                    }
 
 
                     // 如果用户标记不存在，则创建
-                    if (!userMarker) {
-                        userMarker = L.marker([userLat + DELTA_LAT, userLng + DELTA_LNG], { icon: userIcon }).addTo(map)
+                    if (userMarker === null) {
+                        userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
                             .bindPopup('你在这里').openPopup();
-                        map.setView([userLat + DELTA_LAT, userLng + DELTA_LNG], DEFAULT_ZOOM);
+                        map.setView([userLat, userLng], DEFAULT_ZOOM); // 本来只会初始的时候重新定中心的，怎么这地图中心老是飘呢
                     } else {
                         // 如果用户标记已存在，则更新位置
-                        userMarker.setLatLng([userLat + DELTA_LAT, userLng + DELTA_LNG]);
+                        console.log(calculateDistance(userLat, userLng, lstLat, lstLng) + 'm');
+
+                        let center = map.getCenter();
+
+                        userMarker.setLatLng([userLat, userLng]); // 得出结论，进行完这一步后地图会闪现，但这函数是库里的，根本看不懂库的逻辑
+
+                        map.setView([center.lat, center.lng]); // 没办法了，你闪现就闪现吧，闪现之后老子给你强制拉回来，尽管这个函数本不应该在此调用的
                     }
 
                     // 显示最近路径点容器
@@ -415,7 +430,7 @@
                     }
                 },
                 {
-                    enableHighAccuracy: true,
+                    enableHighAccuracy: false,
                     timeout: 5000, // 超时时间（毫秒）
                     maximumAge: 0
                 }
@@ -476,8 +491,8 @@
 
         map.on('mousemove', function (e) {
             // 获取鼠标位置的经纬度
-            let lat = (e.latlng.lat - DELTA_LAT).toFixed(6);
-            let lng = (e.latlng.lng - DELTA_LNG).toFixed(6);
+            let lat = (e.latlng.lat).toFixed(6);
+            let lng = (e.latlng.lng).toFixed(6);
 
             // 更新显示经纬度的内容
             document.getElementById('coordinates').textContent = lat + ', ' + lng;
