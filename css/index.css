@@ -12,10 +12,11 @@ html {
 
 #coordinate-display {
     position: absolute;
-    top: 10px;
+    font-size: 14px;
+    top: 5px;
     right: 10px;
-    background: white;
-    padding: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 2px 5px;
     border: 1px solid #ccc;
     z-index: 1000;
     display: none;
