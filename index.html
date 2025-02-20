@@ -5,186 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>哈尔滨&沈阳红色地图</title>
-    <!-- 引入Leaflet CSS -->
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-        }
+    <link rel="stylesheet" href="css/index.css">
 
-        #map {
-            height: 100vh;
-        }
-
-        #coordinate-display {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 5px;
-            border: 1px solid #ccc;
-            z-index: 1000;
-            display: none;
-        }
-
-        #nearest-points {
-            position: fixed;
-            bottom: 20px;
-            left: 10px;
-            background: rgba(255, 0, 0, 0.8);
-            padding: 10px;
-            border: 2px solid #8B0000;
-            border-radius: 8px;
-            z-index: 1000;
-            max-width: 70%;
-            display: none;
-            color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #nearest-points ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #nearest-points li {
-            cursor: pointer;
-            margin: 5px 0;
-            color: gold;
-        }
-
-        #nearest-points li:hover {
-            color: goldenrod;
-            text-decoration: underline;
-        }
-
-        #nearest-points h4 {
-            margin: 0 0 10px 0;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        /* 自定义定位按钮 */
-        .leaflet-control-locate {
-            background: white;
-            background-clip: padding-box;
-            border: 2px solid rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            padding: 0;
-        }
-
-        .leaflet-control-locate.active:hover {
-            background: #f4f4f4;
-        }
-
-        #locate-icon {
-            stroke-width: 3;
-            stroke: #A9A9A9;
-        }
-
-        /* 侧边栏样式 */
-        #sidebar {
-            position: absolute;
-            top: 50px;
-            left: 10px;
-            background: rgba(255, 0, 0, 0.8);
-            padding: 10px;
-            border: 2px solid #8B0000;
-            border-radius: 8px;
-            z-index: 1000;
-            width: 200px;
-            transition: transform 0.3s ease;
-            transform: translateX(-120%);
-            color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #sidebar.open {
-            transform: translateX(0);
-        }
-
-        #sidebar-toggle {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 0, 0, 0.8);
-            border: 2px solid #8B0000;
-            border-radius: 4px;
-            padding: 5px;
-            cursor: pointer;
-            z-index: 1001;
-            color: white;
-            width: 16px;
-            height: 16px;
-            line-height: 16px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        #sidebar-toggle:hover {
-            color: #f4f4f4;
-            background-color: rgba(255, 64, 64, 0.8);
-        }
-
-        #sidebar ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        #sidebar li {
-            cursor: pointer;
-            margin: 10px 0;
-            color: gold;
-        }
-
-        #sidebar li:hover {
-            color: goldenrod;
-            text-decoration: underline;
-        }
-
-        /* 导航栏样式 */
-        #location-nav {
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-around;
-        }
-
-        #location-nav button {
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #8B0000;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            color: #8B0000;
-            font-size: 14px;
-            font-weight: bold;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        #location-nav button:hover {
-            background: #8B0000;
-            color: white;
-        }
-
-        #location-nav button.active {
-            background: #8B0000;
-            color: white;
-        }
-    </style>
     <!-- 引入Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- <script src="leaflet.js"></script> -->
     <script src="leaflet.mapCorrection.js"></script>
 </head>
 
@@ -390,27 +217,12 @@
                     console.log('用户在北纬 ' + userLat + '，东经 ' + userLng);
                     console.log(userMarker === null);
 
-                    if (userMarker !== null && calculateDistance(userLat, userLng, lstLat, lstLng) < MIN_UPDATE_DIST) {
-                        userLat = lstLat;
-                        userLng = lstLng;
-                        return;
-                    }
-
-
-                    // 如果用户标记不存在，则创建
                     if (userMarker === null) {
                         userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map)
-                            .bindPopup('你在这里').openPopup();
-                        map.setView([userLat, userLng], DEFAULT_ZOOM); // 本来只会初始的时候重新定中心的，怎么这地图中心老是飘呢
+                            .bindPopup('你在这里', { autoPan: false }).openPopup();
+                        map.setView([userLat, userLng], DEFAULT_ZOOM);
                     } else {
-                        // 如果用户标记已存在，则更新位置
-                        console.log(calculateDistance(userLat, userLng, lstLat, lstLng) + 'm');
-
-                        let center = map.getCenter();
-
-                        userMarker.setLatLng([userLat, userLng]); // 得出结论，进行完这一步后地图会闪现，但这函数是库里的，根本看不懂库的逻辑
-
-                        map.setView([center.lat, center.lng]); // 没办法了，你闪现就闪现吧，闪现之后老子给你强制拉回来，尽管这个函数本不应该在此调用的
+                        userMarker.setLatLng([userLat, userLng]);
                     }
 
                     // 显示最近路径点容器
@@ -430,8 +242,8 @@
                     }
                 },
                 {
-                    enableHighAccuracy: false,
-                    timeout: 5000, // 超时时间（毫秒）
+                    enableHighAccuracy: true,
+                    timeout: 5000,
                     maximumAge: 0
                 }
             );
