@@ -8,6 +8,8 @@ function setMapHeight() {
     map.style.height = window.innerHeight + 'px';
 }
 
+setMapHeight();
+
 window.addEventListener('resize', setMapHeight);
 window.addEventListener('orientationchange', setMapHeight);
 
