@@ -3,7 +3,6 @@ import { locateControler } from "./locateControl.js";
 import { userIcon } from "./icon.js";
 import { pathPoints } from "./pathPoints.js";
 
-// 定义用户标记变量
 let userMarker = null;
 
 // 定位功能
@@ -27,8 +26,6 @@ if ("geolocation" in navigator) {
 
             // 显示最近路径点容器
             document.getElementById('nearest-points').style.display = 'block';
-
-
 
             // 计算并显示最近的路径点
             DisplayNearestPoints(userLat, userLng);

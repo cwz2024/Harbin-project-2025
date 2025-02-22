@@ -14,10 +14,9 @@ html {
     position: absolute;
     font-size: 14px;
     top: 5px;
-    right: 10px;
+    right: 5px;
     background: rgba(255, 255, 255, 0.8);
     padding: 2px 5px;
-    border: 1px solid #ccc;
     z-index: 1000;
     display: none;
 }
@@ -79,7 +78,7 @@ html {
 
 #locate-icon {
     stroke-width: 3;
-    stroke: #A9A9A9;
+    stroke: #bbb;
 }
 
 /* 侧边栏样式 */
