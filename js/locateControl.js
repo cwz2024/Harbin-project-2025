@@ -37,7 +37,8 @@ let LocateControl = L.Control.extend({
             if (this.classList.contains('active')) {
                 let lat = parseFloat(container.getAttribute('target-lat'));
                 let lng = parseFloat(container.getAttribute('target-lng'));
-                map.setView([lat, lng], DEFAULT_ZOOM); // 定位到用户位置并恢复默认缩放
+                map.closePopup();
+                map.setView([lat, lng], DEFAULT_ZOOM);
             } else {
                 console.log('无效的定位请求');
             }

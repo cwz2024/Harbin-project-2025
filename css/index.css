@@ -60,7 +60,6 @@ html {
     font-weight: bold;
 }
 
-/* 自定义定位按钮 */
 .leaflet-control-locate {
     background: white;
     background-clip: padding-box;
@@ -76,12 +75,24 @@ html {
     background: #f4f4f4;
 }
 
+.leaflet-popup-content b {
+    text-align: center;
+    display: block;
+}
+
+.leaflet-popup-content p {
+    margin: 1.3em 0 0 0;
+}
+
+.site-intro {
+    text-indent: 2em;
+}
+
 #locate-icon {
     stroke-width: 3;
     stroke: #bbb;
 }
 
-/* 侧边栏样式 */
 #sidebar {
     position: absolute;
     top: 50px;
@@ -144,7 +155,6 @@ html {
     text-decoration: underline;
 }
 
-/* 导航栏样式 */
 #location-nav {
     margin-bottom: 10px;
     display: flex;

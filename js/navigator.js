@@ -24,10 +24,7 @@ if ("geolocation" in navigator) {
             locateControler.setLatLng([userLat, userLng]);
             locateControler.activate();
 
-            // 显示最近路径点容器
             document.getElementById('nearest-points').style.display = 'block';
-
-            // 计算并显示最近的路径点
             DisplayNearestPoints(userLat, userLng);
         },
         function (error) {
@@ -59,12 +56,11 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-// 格式化距离显示
 function formatDistance(distance) {
     if (distance < 1000) {
-        return `${Math.round(distance)} m`; // 小于1公里，显示米，保留整数
+        return `${Math.round(distance)} m`;
     } else {
-        return `${(distance / 1000).toFixed(1)} km`; // 大于或等于1公里，显示公里，保留1位小数
+        return `${(distance / 1000).toFixed(1)} km`;
     }
 }
 
@@ -79,7 +75,6 @@ function DisplayNearestPoints(userLat, userLng) {
 
     let nearestPoints = pointsWithDistance.slice(0, 2);
 
-    // 显示在左下角
     let nearestPointsList = document.getElementById('nearest-points-list');
     nearestPointsList.innerHTML = nearestPoints.map(point => `
         <li data-lat="${point.lat}" data-lng="${point.lng}">
@@ -87,12 +82,12 @@ function DisplayNearestPoints(userLat, userLng) {
         </li>
     `).join('');
 
-    // 点击最近路径点时，定位到该路径点
     nearestPointsList.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', function () {
             let lat = parseFloat(this.getAttribute('data-lat'));
             let lng = parseFloat(this.getAttribute('data-lng'));
-            map.setView([lat, lng], DEFAULT_ZOOM); // 定位到路径点
+            map.closePopup();
+            map.setView([lat, lng], DEFAULT_ZOOM);
         });
     });
 }
