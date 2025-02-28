@@ -28,7 +28,10 @@ pathPoints.forEach(function (point) {
             <img src="${point.image}" alt="${point.title}" style="width:100%;"><br>
             ${point.content ?? '这是' + point.title}<br>
         `;
-    marker.bindPopup(popupContent).openPopup().closePopup();
+    marker.bindPopup(popupContent, {
+        maxWidth: Math.min(300, window.innerWidth - 100),
+        maxHeight: window.innerHeight - 150
+    }).openPopup().closePopup();
     marker.on('click', function () {
         map.setView([point.lat, point.lng], map.getZoom(), {
             animate: true,
