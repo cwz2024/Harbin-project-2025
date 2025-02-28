@@ -30,7 +30,7 @@ pathPoints.forEach(function (point) {
         `;
     marker.bindPopup(popupContent, {
         maxWidth: Math.min(300, window.innerWidth - 100),
-        maxHeight: window.innerHeight - 150
+        maxHeight: window.innerHeight - 200
     }).openPopup().closePopup();
     marker.on('click', function () {
         map.setView([point.lat, point.lng], map.getZoom(), {
