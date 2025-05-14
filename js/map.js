@@ -1,6 +1,6 @@
 import { locateControler } from "./locateControl.js";
 
-const map = L.map('map', { minZoom: 3, attributionControl: false });
+const map = L.map('map', { minZoom: 4, maxBounds: [[90, 180], [-90, -180]], attributionControl: false });
 
 L.control.attribution({ prefix: '<a href="https://leafletjs.com" title="A JavaScript library for interactive maps">Leaflet</a>' }).addTo(map);
 

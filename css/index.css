@@ -10,6 +10,18 @@ html {
     height: 100vh;
 }
 
+select:focus {
+    outline: white solid 1px;
+}
+
+select {
+    padding: 4px;
+    background: red;
+    color: white;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
 #coordinate-display {
     position: absolute;
     font-size: 14px;
@@ -153,32 +165,4 @@ html {
 #sidebar li:hover {
     color: goldenrod;
     text-decoration: underline;
-}
-
-#location-nav {
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-around;
-}
-
-#location-nav button {
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #8B0000;
-    border-radius: 4px;
-    padding: 5px 10px;
-    cursor: pointer;
-    color: #8B0000;
-    font-size: 14px;
-    font-weight: bold;
-    transition: background 0.3s ease, color 0.3s ease;
-}
-
-#location-nav button:hover {
-    background: #8B0000;
-    color: white;
-}
-
-#location-nav button.active {
-    background: #8B0000;
-    color: white;
 }

@@ -26,7 +26,7 @@ pathPoints.forEach(function (point) {
     let popupContent = `
             <b>${point.title}</b><br>
             <img src="${point.image}" alt="${point.title}" style="width:100%;"><br>
-            ${point.content ?? '这是' + point.title}<br>
+            <p class=\"site-intro\">${point.content || '这是' + point.title}</p><br>
         `;
     marker.bindPopup(popupContent, {
         maxWidth: Math.min(300, window.innerWidth - 100),
@@ -42,24 +42,26 @@ pathPoints.forEach(function (point) {
     });
 });
 
-map.setView([INITIAL_LAT, INITIAL_LNG], DEFAULT_ZOOM);
+map.setView([INITIAL_LAT, INITIAL_LNG], 5);
 
-updateSidebar(pathPoints.filter(point => point.location === '哈尔滨'));
-document.querySelector('#location-nav button').classList.add('active');
+let nav = document.querySelector('#location-nav')
 
-document.querySelectorAll('#location-nav button').forEach(button => {
-    button.addEventListener('click', function () {
-        let location = this.getAttribute('data-location');
-        let filteredPoints = pathPoints.filter(point => point.location === location);
+let province = []
+for (let i = 0; i < pathPoints.length; i++) {
+    if (!province.includes(pathPoints[i].location)) {
+        province.push(pathPoints[i].location)
+    }
+}
+province.sort((a, b) => a.localeCompare(b))
+updateSidebar(pathPoints.filter(point => point.location === province[0]));
+console.log(province)
+nav.innerHTML = province.map(p => `
+    <option value="${p}">${p}</option>
+`).join('');
 
-        updateSidebar(filteredPoints);
-
-        document.querySelectorAll('#location-nav button').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        this.classList.add('active');
-    });
-});
+nav.onchange = function () {
+    updateSidebar(pathPoints.filter(point => point.location === this.value))
+}
 
 function updateSidebar(points) {
     let sidebarList = document.getElementById('sidebar-list');

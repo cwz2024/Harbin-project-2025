@@ -1,3 +1,3 @@
-const INITIAL_LAT = 45.761;
-const INITIAL_LNG = 126.631;
+const INITIAL_LAT = 38;
+const INITIAL_LNG = 109;
 const DEFAULT_ZOOM = 15;
